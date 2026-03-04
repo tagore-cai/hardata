@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - '*'
+      - "*"
 
 env:
   CARGO_TERM_COLOR: always
@@ -45,7 +45,7 @@ jobs:
 
     runs-on: ${{ matrix.OS }}
     env:
-      NAME: russ
+      NAME: hardata
       TARGET: ${{ matrix.TARGET }}
       OS: ${{ matrix.OS }}
       FEATURES: ${{ matrix.FEATURES }}
@@ -93,16 +93,16 @@ jobs:
               ;;
             armv7-unknown-linux-musleabihf)
               MUSL_URI=armv7l-linux-musleabihf-cross
-              ;;    
+              ;;
             armv7-unknown-linux-musleabi)
               MUSL_URI=armv7m-linux-musleabi-cross
-              ;;   
+              ;;
             arm-unknown-linux-musleabihf)
               MUSL_URI=arm-linux-musleabihf-cross
-              ;;    
+              ;;
             arm-unknown-linux-musleabi)
               MUSL_URI=arm-linux-musleabi-cross
-              ;;        
+              ;;
             i686-unknown-linux-musl)
               MUSL_URI=i686-linux-musl-cross
               ;;
@@ -117,7 +117,6 @@ jobs:
 
 
           rustup -V
-
 
       - name: Configure cargo for cross-compilation
         run: |
@@ -135,28 +134,45 @@ jobs:
           rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
           [target.arm-unknown-linux-musleabihf]
           linker = "arm-linux-musleabihf-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]   
+          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
           [target.arm-unknown-linux-musleabi]
           linker = "arm-linux-musleabi-gcc"
           rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
           [target.x86_64-pc-windows-msvc]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]    
+          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
           [target.i686-pc-windows-msvc]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]      
+          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
           [target.x86_64-apple-darwin]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"] 
+          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
           [target.aarch64-apple-darwin]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]     
+          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
           [target.i686-unknown-linux-musl]
           linker = "i686-linux-musl-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]   
+          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
           EOF
 
       - name: Install rust target
         run: rustup target add $TARGET
 
+      - name: Install Dioxus CLI for web build
+        run: |
+          cargo install dioxus-cli --version 0.5.5 --locked
+
+      - name: Build web frontend
+        run: |
+          echo "Building web frontend (Dioxus WASM)..."
+          echo "Cleaning old web build artifacts..."
+          rm -rf web/dist web/target
+          mkdir -p web/dist
+          cd web && dx build --release
+          echo "Copying build artifacts to web/dist..."
+          cp -r web/target/dx/hardata-web/release/web/public/* web/dist/ 2>/dev/null || true
+          echo "Copying assets static resources..."
+          cp -r web/assets/* web/dist/assets/ 2>/dev/null || true
+          echo "Frontend build completed: ./web/dist/"
+
       - name: Run build hardata
-        run: cargo build --release --target $TARGET 
+        run: cargo build --release --target $TARGET
       - name: List target
         run: find ./target
       - name: Compress

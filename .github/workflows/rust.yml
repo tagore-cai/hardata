@@ -156,7 +156,7 @@ jobs:
 
       - name: Install Dioxus CLI for web build
         run: |
-          cargo install dioxus-cli --version 0.5.5 --locked
+          cargo install dioxus-cli --locked
 
       - name: Build web frontend
         run: |

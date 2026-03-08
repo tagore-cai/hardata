@@ -156,7 +156,7 @@ jobs:
 
       - name: Install Dioxus CLI for web build
         run: |
-          cargo install dioxus-cli --locked
+           curl -sSL https://dioxus.dev/install.sh | bash
 
       - name: Build web frontend
         run: |
